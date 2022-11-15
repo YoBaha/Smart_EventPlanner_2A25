@@ -2,6 +2,9 @@
 #include <QApplication>
 #include <QMessageBox>
 #include "connection.h"
+#include <dumessengerserver.h>
+#include"widget.h"
+using namespace Duartecorporation;
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -21,6 +24,18 @@ int main(int argc, char *argv[])
                     QObject::tr("connection failed.\n"
                                 "Click Cancel to exit."), QMessageBox::Cancel);
 
+ QMessageBox msgbox;
+    dumessengerserver server;
+    if(!server.startserver(3333))
+    {
+
+        msgbox.setText("erreur server");
+        msgbox.exec();
+    }
+    msgbox.setText("server started...");
+    msgbox.exec();
+    /*widget wid;
+     wid.show();*/
 
 
     return a.exec();

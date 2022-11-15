@@ -12,12 +12,43 @@
 #include<QTextStream>
 #include <QPdfWriter>
 #include <QPainter>
-
+#include <dumessengerserver.h>
+#include <dumessengersocket.h>
+#include <QTcpSocket>
+#include <QTcpServer>
+#include <QTextStream>
+#include <QProcess>
+#include "widget.h"
+#include "connectdialog.h"
+#include <QApplication>
+#include <QDialog>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QChartView>
+#include <QtCharts/QtCharts>
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    series=new QPieSeries();
+    QChart *chart=new QChart();
+    chart->addSeries(series);
+    chart->setTitle("stats");
+    series->setLabelsVisible(true);
+
+    QChartView  *chartview= new QChartView(chart);
+    chartview->setParent(ui->horizontalFrame);
+    //
+    //
+    //begin tcp
+   QTcpSocket *mSocket=new QTcpSocket(this);
+   connect (mSocket, &QTcpSocket::readyRead, [&]() {
+   QTextStream T(mSocket) ;
+   auto text = T.readAll();
+   });
+   mSocket->connectToHost("localhost",320,QIODevice::ReadWrite);
+
+        // end tcp
      ui->tableView->setSortingEnabled(true); // sorting
     ui->tableView->setModel(cl.afficher());
     ui->tableView->sortByColumn(0);
@@ -278,7 +309,14 @@ void MainWindow::on_pushButton_26_clicked()
 
 void MainWindow::on_pushButton_27_clicked()
 {int s=0,test=0,converter,currenttot=0;
+    qreal convch;
     ui->stackedWidget->setCurrentIndex(5);
+    //begin piechart
+series->clear();
+series->setLabelsVisible(true);
+
+
+    //end piechart
     QSqlQuery query,query1;
     query.prepare("SELECT COUNT(*) FROM CLIENT");
         query.exec();
@@ -296,6 +334,8 @@ void MainWindow::on_pushButton_27_clicked()
         currenttot=currenttot+test;
         converter=(int) test*100/s;
         ui->progressBar_2->setValue(converter);
+        convch=(qreal)360*test/s;
+        series->append("2000",convch);
 
         query1.prepare("SELECT COUNT(*) FROM CLIENT where DATENAISSANCE like '%/199%'");
         query1.exec();
@@ -305,6 +345,8 @@ void MainWindow::on_pushButton_27_clicked()
         currenttot=currenttot+test;
         converter=(int) test*100/s;
         ui->progressBar_3->setValue(converter);
+        convch=(qreal)360*test/s;
+        series->append("1990",convch);
 
         query1.prepare("SELECT COUNT(*) FROM CLIENT where DATENAISSANCE like '%/198%'");
         query1.exec();
@@ -314,7 +356,8 @@ void MainWindow::on_pushButton_27_clicked()
         currenttot=currenttot+test;
         converter=(int) test*100/s;
         ui->progressBar_4->setValue(converter);
-
+        convch=(qreal)360*test/s;
+        series->append("1980",convch);
 
         query1.prepare("SELECT COUNT(*) FROM CLIENT where DATENAISSANCE like '%/197%'");
         query1.exec();
@@ -324,11 +367,16 @@ void MainWindow::on_pushButton_27_clicked()
         currenttot=currenttot+test;
         converter=(int) test*100/s;
         ui->progressBar_5->setValue(converter);
+        convch=(qreal)360*test/s;
+        series->append("1970",convch);
 
         test=s-currenttot;
         ui->lcdNumber_6->display(test);
         converter=(int) test*100/s;
         ui->progressBar_6->setValue(converter);
+        convch=(qreal)360*test/s;
+        series->append("others",convch);
+
 
 }
 
@@ -439,4 +487,34 @@ void MainWindow::on_pushButton_35_clicked()
 {
     QString log=ui->lineEdit_11->text();
     ui->tableView_2->setModel(cl.affichermessage(log));
+}
+
+void MainWindow::on_pushButton_38_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(7);
+
+}
+
+void MainWindow::on_pushButton_37_clicked()
+{
+    QTextStream t(mSocket);
+        t << ui->lineEdit_11->text() << ":" << ui->lineEdit_15->text();
+        mSocket -> flush();
+        ui->lineEdit_15->clear();
+}
+
+void MainWindow::on_pushButton_39_clicked()
+{    mSocket=new QTcpSocket(this);
+     connect(mSocket,&QTcpSocket::readyRead, [&](){
+         QTextStream t(mSocket);
+         auto text=t.readAll();
+         ui->textEdit->append(text);
+     });
+    /*connectdialog d(this);
+    d.exec();
+    if(d.exec()==QDialog::Rejected){
+        return ;
+    }
+    mSocket->connectToHost(d.hostname(), d.port());*/
+      mSocket->connectToHost("localhost", 3333);
 }

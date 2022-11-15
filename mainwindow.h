@@ -1,8 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
 #include <QMainWindow>
 #include "client.h"
+#include <QTcpSocket>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QChartView>
+#include <QtCharts/QtCharts>
 namespace Ui {
 class MainWindow;
 }
@@ -80,8 +83,18 @@ private slots:
 
     void on_pushButton_35_clicked();
 
+    void on_pushButton_38_clicked();
+
+    void on_pushButton_37_clicked();
+
+    void on_pushButton_39_clicked();
+
 private:
     Ui::MainWindow *ui;
+    QTcpSocket *mSocket;
+    QPieSeries *series;
+    /*QChart *chart;
+    QChartView  *chartview;*/
 
 };
 
