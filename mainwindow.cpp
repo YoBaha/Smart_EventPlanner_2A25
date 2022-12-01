@@ -25,11 +25,23 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QChartView>
 #include <QtCharts/QtCharts>
+#include "arduino.h"
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    //arduino.
+    int ret=A.connect_arduino();
+        switch(ret){
+        case(0):qDebug()<< "arduino is available and connected to : "<< A.getarduino_port_name();
+            break;
+        case(1):qDebug() << "arduino is available but not connected to :" <<A.getarduino_port_name();
+           break;
+        case(-1):qDebug() << "arduino is not available";
+        }
+         QObject::connect(A.getserial(),SIGNAL(readyRead()),this,SLOT(update_label()));
+    // end arduino
     series=new QPieSeries();
     QChart *chart=new QChart();
     chart->addSeries(series);
@@ -517,4 +529,103 @@ void MainWindow::on_pushButton_39_clicked()
     }
     mSocket->connectToHost(d.hostname(), d.port());*/
       mSocket->connectToHost("localhost", 3333);
+}
+void MainWindow::update_label()
+{
+    /*data=A.read_from_arduino();
+
+    if(data=="1")
+        qDebug() << "jngdiff";
+    else
+        qDebug() << "botdiff";*/
+    data=A.read_from_arduino();
+QMessageBox msgbox;
+
+   if(data=="1")
+     {
+        ui->stackedWidget->setCurrentIndex(1);
+        msgbox.setText("welcome");
+                msgbox.exec();
+
+}else if (data=="0"){
+
+       msgbox.setText("wrong card\n");
+               msgbox.exec();
+
+
+
+
+
+
+
+}
+
+
+}
+
+void MainWindow::on_pushButton_40_clicked()
+{  A.write_to_arduino("1");
+    do
+    {
+        A.serial->waitForReadyRead() ;
+    }
+    while(A.serial->bytesAvailable()!=11) ;
+    data=A.read_from_arduino();
+    qDebug() << data;
+
+
+}
+
+void MainWindow::on_pushButton_41_clicked()
+{
+
+        data=A.read_from_arduino();
+
+
+       if(data=="1")
+         {
+            ui->stackedWidget->setCurrentIndex(5);
+      /*     QString ch="a306ef11";
+           qDebug()<<ch;
+          int k=ch.toInt();
+           juje j;
+    query
+           query->prepare("SELECT * FROM jugeee WHERE (identifiant  LIKE "+k+")");
+
+          // model->setQuery("SELECT* FROM jugeee");
+
+           //model->setQuery(*query);
+
+           query->exec();
+
+           if(query->exec()){
+           model->setQuery(*query);
+           table->setModel(model);
+
+
+           table->show();
+           }
+
+                if(query->numRowsAffected()==0){
+
+              QMessageBox::warning(nullptr, QObject::tr("database is open"),
+                       QObject::tr("juge introvale .\n"
+                                    "Click Cancel to exit."), QMessageBox::Cancel);
+
+
+         }}*/
+
+    }else if (data=="0"){
+
+           QMessageBox::warning(nullptr, QObject::tr("database is open"),
+                    QObject::tr("EURREUR .\n"
+                                 "Click Cancel to exit."), QMessageBox::Cancel);
+
+
+
+
+
+
+
+    }
 }

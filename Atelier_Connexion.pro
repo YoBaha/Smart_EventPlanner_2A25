@@ -7,6 +7,7 @@ QT += core network
 QT       += core gui sql
 QT += sql
 QT += charts
+QT       += core gui  serialport
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = Atelier_Connexion
@@ -26,6 +27,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+    arduino.cpp \
     client.cpp \
     connectdialog.cpp \
     dumessengerserver.cpp \
@@ -36,6 +38,7 @@ SOURCES += \
     widget.cpp
 
 HEADERS += \
+    arduino.h \
     client.h \
     connectdialog.h \
     dumessengerserver.h \

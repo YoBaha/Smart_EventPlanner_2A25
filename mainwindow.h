@@ -6,6 +6,7 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QChartView>
 #include <QtCharts/QtCharts>
+#include "arduino.h"
 namespace Ui {
 class MainWindow;
 }
@@ -88,6 +89,11 @@ private slots:
     void on_pushButton_37_clicked();
 
     void on_pushButton_39_clicked();
+    void update_label();
+
+    void on_pushButton_40_clicked();
+
+    void on_pushButton_41_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -95,6 +101,8 @@ private:
     QPieSeries *series;
     /*QChart *chart;
     QChartView  *chartview;*/
+    QByteArray data;
+    Arduino A;
 
 };
 
