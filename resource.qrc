@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>img.PNG</file>
+        <file>horloge.png</file>
+        <file>lc.png</file>
+        <file>quit.png</file>
+        <file>backg.png</file>
+        <file>clock.png</file>
+        <file>quit-icon.png</file>
+        <file>str.png</file>
+        <file>bckg2.jpg</file>
+        <file>bas.png</file>
+        <file>haut.png</file>
+        <file>pdf.png</file>
+        <file>rech.png</file>
+        <file>mail.png</file>
+        <file>arduino-icon-28.png</file>
+    </qresource>
+</RCC>
