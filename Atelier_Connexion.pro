@@ -7,6 +7,8 @@ QT += core network
 QT       += core gui sql
 QT += sql
 QT += charts
+QT       += core gui  serialport
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = Atelier_Connexion
@@ -26,6 +28,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+    QrCode.cpp \
+    arduino.cpp \
     client.cpp \
     connectdialog.cpp \
     dumessengerserver.cpp \
@@ -33,15 +37,21 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     connection.cpp \
+    partenaire.cpp \
+    smtp.cpp \
     widget.cpp
 
 HEADERS += \
+    QrCode.hpp \
+    arduino.h \
     client.h \
     connectdialog.h \
     dumessengerserver.h \
     dumessengersocket.h \
         mainwindow.h \
     connection.h \
+    partenaire.h \
+    smtp.h \
     widget.h
 
 FORMS += \
@@ -54,3 +64,6 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 QMAKE_CXXFLAGS +=-std=gnu++11
+
+RESOURCES += \
+    rsc.qrc

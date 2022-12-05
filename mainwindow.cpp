@@ -25,12 +25,46 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QChartView>
 #include <QtCharts/QtCharts>
+
+#include <QMessageBox>
+#include <QtPrintSupport/QPrintDialog>
+#include <QtPrintSupport/QPrinter>
+#include <QDataStream>
+#include <QDialog>
+#include <QFile>
+#include <QFileDialog>
+#include <QSortFilterProxyModel>
+#include <QTextTableFormat>
+#include <QDesktopServices>
+#include <QUrl>
+#include "partenaire.h"
+#include "smtp.h"
+#include"connection.h"
+#include"QrCode.hpp"
+#include "arduino.h"
+using namespace qrcodegen;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     series=new QPieSeries();
+
+    //arduino.
+        int ret=A.connect_arduino();
+            switch(ret){
+            case(0):qDebug()<< "arduino is available and connected to : "<< A.getarduino_port_name();
+                break;
+            case(1):qDebug() << "arduino is available but not connected to :" <<A.getarduino_port_name();
+               break;
+            case(-1):qDebug() << "arduino is not available";
+            }
+             QObject::connect(A.getserial(),SIGNAL(readyRead()),this,SLOT(update_label()));
+        // end arduino
+    connect(ui->sendBtn, SIGNAL(clicked()),this, SLOT(sendMail()));
+        connect(ui->browseBtn, SIGNAL(clicked()), this, SLOT(browse()));
+ui->tableView_3->setModel(ptmp.afficher());
+
     QChart *chart=new QChart();
     chart->addSeries(series);
     chart->setTitle("stats");
@@ -395,7 +429,7 @@ void MainWindow::on_pushButton_30_clicked()
     if(qry.exec("select login, pass from PERSONNEL where login =  '"+log+"' and pass = '" +pass+ "' " ))
     {
         while(qry.next())
-        {ui->stackedWidget->setCurrentIndex(1);
+        {ui->stackedWidget->setCurrentIndex(8);
             ui->tableView_2->setModel(cl.affichermessage(log));
             msgbox.setText("welcome");
                     msgbox.exec();
@@ -419,7 +453,7 @@ void MainWindow::on_pushButton_30_clicked()
 
 void MainWindow::on_pushButton_34_clicked()
 {
-    ui->stackedWidget->setCurrentIndex(6);
+    ui->stackedWidget->setCurrentIndex(7);
 
 }
 
@@ -518,3 +552,497 @@ void MainWindow::on_pushButton_39_clicked()
     mSocket->connectToHost(d.hostname(), d.port());*/
       mSocket->connectToHost("localhost", 3333);
 }
+
+void MainWindow::on_pushButton_40_clicked()
+{
+    bool verif=false;
+        QString log=ui->lineEdit_11->text();
+        QSqlQuery qry;
+        QMessageBox msgbox;
+        if(log=="")
+        {
+            ui->stackedWidget->setCurrentIndex(1);
+            verif=true;
+        }
+        else if(qry.exec("select role from PERSONNEL where login =  '"+log+"' " ))
+        {
+            while(qry.next())
+            {   if((qry.value(0)=="") || (qry.value(0)=="rh"))
+                {ui->stackedWidget->setCurrentIndex(1);
+                        verif=true;}
+            }
+
+            if(verif==false)
+            {
+
+               msgbox.setText("droits d acces non donnés");
+                       msgbox.exec();
+            }
+        }
+        else
+        {
+            msgbox.setText("erreur req sql");
+                    msgbox.exec();
+        }
+
+}
+
+void MainWindow::on_pushButton_43_clicked()
+{   bool verif=false;
+    QString log=ui->lineEdit_11->text();
+    QSqlQuery qry;
+    QMessageBox msgbox;
+    if(log=="")
+    {
+        ui->stackedWidget->setCurrentIndex(9);
+        ui->stackedWidget_2->show();
+        verif=true;
+    }
+    else if(qry.exec("select role from PERSONNEL where login =  '"+log+"' " ))
+    {
+        while(qry.next())
+        {   if((qry.value(0)=="") || (qry.value(0)=="part"))
+            {    ui->stackedWidget->setCurrentIndex(9);
+                ui->stackedWidget_2->show();
+                    verif=true;}
+        }
+
+        if(verif==false)
+        {
+
+           msgbox.setText("droits d acces non donnés");
+                   msgbox.exec();
+        }
+    }
+    else
+    {
+        msgbox.setText("erreur req sql");
+                msgbox.exec();
+    }
+
+
+}
+
+void MainWindow::on_pushButton_44_clicked()
+{
+    ui->stackedWidget_2->setCurrentIndex(3);
+}
+
+void MainWindow::on_pushButton_45_clicked()
+{
+    ui->stackedWidget_2->setCurrentIndex(4);
+}
+
+void MainWindow::on_pushButton_46_clicked()
+{
+    ui->stackedWidget_2->setCurrentIndex(5);
+}
+
+void MainWindow::on_pushButton_47_clicked()
+{
+    ui->stackedWidget_2->setCurrentIndex(2);
+}
+
+void MainWindow::on_pushButton_48_clicked()
+{
+
+}
+
+void MainWindow::on_pushButton_49_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(8);
+    ui->stackedWidget_2->hide();
+}
+
+void MainWindow::on_qrcodegen_clicked()
+{
+    int tabeq=ui->tableView_3->currentIndex().row();
+               QVariant idd=ui->tableView_3->model()->data(ui->tableView_3->model()->index(tabeq,0));
+               QString id= idd.toString();
+               QSqlQuery qry;
+               qry.prepare("select * from PARTENAIRE where IDP=:id");
+               qry.bindValue(":IDP",id);
+               qry.exec();
+                  QString nomp, amp, nump, adp, ofrp;
+
+               while(qry.next()){
+
+
+                   nomp=qry.value(2).toString();
+                   amp=qry.value(3).toString();
+                   nump=qry.value(4).toString();
+                   adp=qry.value(5).toString();
+                   ofrp=qry.value(6).toString();
+
+
+               }
+
+
+                      id="NOMP:"+nomp+"AMP:"+amp+"NUMP:"+nump+"ADP:"+adp+"OFRP:"+ofrp;
+               QrCode qr = QrCode::encodeText(id.toUtf8().constData(), QrCode::Ecc::HIGH);
+
+               // Read the black & white pixels
+               QImage im(qr.getSize(),qr.getSize(), QImage::Format_RGB888);
+               for (int y = 0; y < qr.getSize(); y++) {
+                   for (int x = 0; x < qr.getSize(); x++) {
+                       int color = qr.getModule(x, y);  // 0 for white, 1 for black
+
+                       // You need to modify this part
+                       if(color==0)
+                           im.setPixel(x, y,qRgb(254, 254, 254));
+                       else
+                           im.setPixel(x, y,qRgb(0, 0, 0));
+                   }
+               }
+               im=im.scaled(200,200);
+               ui->qrcodecommande->setPixmap(QPixmap::fromImage(im));
+}
+
+void MainWindow::on_pushButton_50_clicked()
+{
+    QPdfWriter pdf("mypdf.pdf");
+
+           QPainter painter(&pdf);
+           int i = 4000;
+          painter.setPen(Qt::black);
+          painter.setFont(QFont("Time New Roman", 25));
+          painter.drawText(3000,1400,"Liste Des Partenaires Disponibles");
+          painter.setPen(Qt::black);
+         painter.setFont(QFont("Time New Roman", 15));
+         painter.drawRect(100,100,9400,2500);
+        painter.drawRect(100,3000,9400,500);
+          painter.setFont(QFont("Time New Roman", 9));
+          painter.drawText(400,3300,"ID");
+          painter.drawText(1000,3300,"NOM");
+           painter.drawText(2200,3300,"NUM TLP");
+         painter.drawText(3400,3300,"Offre");
+         painter.drawText(5900,3300,"Adresse Mail");
+         painter.drawText(8100,3300,"Adresse Physique");
+
+                      painter.drawRect(100,3000,9400,9000);
+
+                      QSqlQuery query;
+                      query.prepare("select * from PARTENAIRE");
+                      query.exec();
+                      while (query.next())
+                      {
+                          painter.drawText(400,i,query.value(0).toString());
+                          painter.drawText(1000,i,query.value(1).toString());
+                          painter.drawText(2300,i,query.value(2).toString());
+                          painter.drawText(3400,i,query.value(3).toString());
+                          painter.drawText(5900,i,query.value(4).toString());
+                          painter.drawText(8100,i,query.value(5).toString());
+
+
+
+                         i = i + 350;
+                      }
+                      QMessageBox::information(this, QObject::tr("PDF Enregistré!"),
+                      QObject::tr("PDF Enregistré!.\n" "Click Cancel to exit."), QMessageBox::Cancel);
+
+}
+
+void MainWindow::on_pushButton_51_clicked()
+{
+    ui->stackedWidget_2->setCurrentIndex(1);
+}
+
+//MAILING
+void  MainWindow::browse()
+{
+    files.clear();
+
+    QFileDialog dialog(this);
+    dialog.setDirectory(QDir::homePath());
+    dialog.setFileMode(QFileDialog::ExistingFiles);
+
+    if (dialog.exec())
+        files = dialog.selectedFiles();
+
+    QString fileListString;
+    foreach(QString file, files)
+        fileListString.append( """ + QFileInfo(file).fileName() + "" " );
+
+    ui->file->setText( fileListString );
+
+}
+void   MainWindow::sendMail()
+{
+    Smtp* smtp = new Smtp("yassine.shimi02@gmail.com",ui->mail_pass->text(), "smtp.gmail.com");
+    //connect(smtp, SIGNAL(status(QString)), this, SLOT(mailSent(QString)));
+
+    if( !files.isEmpty() )
+        smtp->sendMail("yassine.shimi02@gmail.com", ui->rcpt->text() , ui->subject->text(),ui->msg->toPlainText(), files );
+    else
+        smtp->sendMail("yassine.shimi@gmail.com", ui->rcpt->text() , ui->subject->text(),ui->msg->toPlainText());
+}
+void   MainWindow::mailSent(QString status)
+{
+
+    if(status == "Message sent")
+        QMessageBox::warning( nullptr, tr( "Qt Simple SMTP client" ), tr( "Message sent!\n\n" ) );
+    ui->rcpt->clear();
+    ui->subject->clear();
+    ui->file->clear();
+    ui->msg->clear();
+    ui->mail_pass->clear();
+}
+
+void MainWindow::on_pushButton_53_clicked()
+{
+    int id=ui->supprimer_part->text().toInt();
+    bool test=ptmp.supprimer(id);
+    if(test){
+        ui->tableView_3->setModel(ptmp.afficher());
+        QMessageBox::information(nullptr,QObject::tr("success"),tr("Suppression Effectuée Avec Success"));
+    }
+    else {
+
+        QMessageBox::critical(nullptr,QObject::tr("erreur!!"),tr("Suppression Non Effectuée!!"));
+    }
+
+}
+
+void MainWindow::on_pushButton_55_clicked()
+{
+    QString nomp;
+        QString amp;
+        QString nump;
+        QString adp;
+        QString ofrp;
+        int idp ;
+
+    nomp=ui->nom_part->text();
+    amp=ui->adm_part->text();
+    nump=ui->num_part->text();
+    adp=ui->adrs_part->text();
+    ofrp=ui->offre_part->text();
+    idp=ui->id_part->text().toInt();
+    partenaire p(nomp,amp,nump,adp,ofrp,idp);
+
+    if(nomp.isEmpty() || amp.isEmpty() || nump.isEmpty() || adp.isEmpty() || ofrp.isEmpty())
+                     {
+                         QMessageBox::critical(0,qApp->tr("ERREUR"),qApp->tr("veillez remplir les champs vides."),QMessageBox::Cancel);
+                     }
+    else{
+    bool test= p.ajouter();
+        if(test){
+            ui->tableView_3->setModel(ptmp.afficher());
+            QMessageBox::information(nullptr,QObject::tr("Enregistrer"),tr("Ajout Effectué Avec Success"));
+        }
+        else
+        {     QMessageBox::critical(nullptr,QObject::tr("erreur!!"),tr("Ajout Non Effectué!!"));
+        }}
+}
+
+void MainWindow::on_pushButton_60_clicked()
+{
+    QString id=ui->rech_part->text();
+    ui->tableView_3->setModel(ptmp.chercher_part(id));
+}
+
+void MainWindow::on_pushButton_58_clicked()
+{
+    partenaire p;
+    ui->tableView->setModel(ptmp.triA());
+
+}
+
+void MainWindow::on_pushButton_61_clicked()
+{
+    partenaire p;
+    ui->tableView->setModel(ptmp.triD());
+
+}
+
+void MainWindow::on_pushButton_62_clicked()
+{
+    QString nomp;
+        QString amp;
+        QString nump;
+        QString adp;
+        QString ofrp;
+        //int idp ;
+
+    nomp=ui->nom_part_2->text();
+    amp=ui->adm_part_2->text();
+    nump=ui->num_part_2->text();
+    adp=ui->adrs_part_2->text();
+    ofrp=ui->offre_part_2->text();
+    //idp=ui->id_part->text().toInt();
+    int id=ui->id_part_2->text().toInt();
+    partenaire p(nomp,amp,nump,adp,ofrp,id);
+    bool test= p.mettre_aj(id);
+    if(test){
+        ui->tableView_3->setModel(p.afficher());
+        QMessageBox::information(nullptr,QObject::tr("success"),tr("Modification Effectuée Avec Success"));
+    }
+    else
+    {     QMessageBox::critical(nullptr,QObject::tr("erreur!!"),tr("Modification Non Effectuée!!"));
+    }
+
+
+}
+
+void MainWindow::on_pushButton_63_clicked()
+{
+    ui->stackedWidget_2->setCurrentIndex(1);
+}
+
+void MainWindow::on_pushButton_52_clicked()
+{
+    ui->stackedWidget_2->setCurrentIndex(0);
+}
+
+void MainWindow::on_pushButton_54_clicked()
+{
+    ui->stackedWidget_2->setCurrentIndex(0);
+}
+
+void MainWindow::on_pushButton_57_clicked()
+{
+    ui->stackedWidget_2->setCurrentIndex(0);
+}
+
+void MainWindow::on_pushButton_59_clicked()
+{
+    ui->stackedWidget_2->setCurrentIndex(0);
+}
+
+void MainWindow::on_pushButton_64_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(8);
+}
+
+void MainWindow::on_pushButton_41_clicked()
+{
+    bool verif=false;
+        QString log=ui->lineEdit_11->text();
+        QSqlQuery qry;
+        QMessageBox msgbox;
+        if(log=="")
+        {
+            ui->stackedWidget->setCurrentIndex(9);
+            verif=true;
+        }
+        else if(qry.exec("select role from PERSONNEL where login =  '"+log+"' " ))
+        {
+            while(qry.next())
+            {   if((qry.value(0)=="") || (qry.value(0)=="pers"))
+                {    ui->stackedWidget->setCurrentIndex(9);
+
+                        verif=true;}
+            }
+
+            if(verif==false)
+            {
+
+               msgbox.setText("droits d acces non donnés");
+                       msgbox.exec();
+            }
+        }
+        else
+        {
+            msgbox.setText("erreur req sql");
+                    msgbox.exec();
+        }
+}
+
+void MainWindow::on_pushButton_42_clicked()
+{
+    bool verif=false;
+        QString log=ui->lineEdit_11->text();
+        QSqlQuery qry;
+        QMessageBox msgbox;
+        if(log=="")
+        {
+            ui->stackedWidget->setCurrentIndex(9);
+            verif=true;
+        }
+        else if(qry.exec("select role from PERSONNEL where login =  '"+log+"' " ))
+        {
+            while(qry.next())
+            {   if((qry.value(0)=="") || (qry.value(0)=="espa"))
+                {    ui->stackedWidget->setCurrentIndex(9);
+
+                        verif=true;}
+            }
+
+            if(verif==false)
+            {
+
+               msgbox.setText("droits d acces non donnés");
+                       msgbox.exec();
+            }
+        }
+        else
+        {
+            msgbox.setText("erreur req sql");
+                    msgbox.exec();
+        }
+}
+
+void MainWindow::on_pushButton_65_clicked()
+{
+    bool verif=false;
+        QString log=ui->lineEdit_11->text();
+        QSqlQuery qry;
+        QMessageBox msgbox;
+        if(log=="")
+        {
+            ui->stackedWidget->setCurrentIndex(9);
+            verif=true;
+        }
+
+        else if(qry.exec("select role from PERSONNEL where login =  '"+log+"' " ))
+        {
+            while(qry.next())
+            {   if((qry.value(0)=="") || (qry.value(0)=="part"))
+                {    ui->stackedWidget->setCurrentIndex(9);
+
+                        verif=true;}
+            }
+
+            if(verif==false)
+            {
+
+               msgbox.setText("droits d acces non donnés");
+                       msgbox.exec();
+            }
+        }
+        else
+        {
+            msgbox.setText("erreur req sql");
+                    msgbox.exec();
+        }
+}
+
+void MainWindow::update_label()
+{
+    /*data=A.read_from_arduino();
+
+    if(data=="1")
+        qDebug() << "jngdiff";
+    else
+        qDebug() << "botdiff";*/
+    data=A.read_from_arduino();
+QMessageBox msgbox;
+
+   if(data=="1")
+     {
+        ui->stackedWidget->setCurrentIndex(8);
+        msgbox.setText("welcome");
+                msgbox.exec();
+
+}else if (data=="0"){
+
+       msgbox.setText("wrong card\n");
+               msgbox.exec();
+
+
+
+
+
+
+
+}}

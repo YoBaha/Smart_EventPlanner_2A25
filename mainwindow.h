@@ -6,6 +6,34 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QChartView>
 #include <QtCharts/QtCharts>
+
+#include <QStackedWidget>
+#include <QtGui>
+#include<QtWidgets/QMainWindow>
+#include <QMainWindow>
+#include <QDebug>
+#include <QSslSocket>
+#include <QMainWindow>
+#include <QVariant>
+#include <partenaire.h>
+#include <QMainWindow>
+#include <QPainter>
+//#include <QPrinter>
+//#include <QPrintPreviewDialog>
+#include <QTextEdit>
+#include "arduino.h"
+
+#include <QtNetwork/QAbstractSocket>
+#include <QtNetwork/QSslSocket>
+#include <QString>
+#include <QTextStream>
+#include <QDebug>
+#include <QtWidgets/QMessageBox>
+#include <QByteArray>
+#include <QFile>
+#include <QFileInfo>
+
+
 namespace Ui {
 class MainWindow;
 }
@@ -18,6 +46,7 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
        client cl;
+       QSortFilterProxyModel *proxy;
 private slots:
     void on_pushButton_clicked();
 
@@ -89,12 +118,72 @@ private slots:
 
     void on_pushButton_39_clicked();
 
+    void on_pushButton_40_clicked();
+
+    void on_pushButton_43_clicked();
+
+    void on_pushButton_44_clicked();
+
+    void on_pushButton_45_clicked();
+
+    void on_pushButton_46_clicked();
+
+    void on_pushButton_47_clicked();
+
+    void on_pushButton_48_clicked();
+
+    void on_pushButton_49_clicked();
+
+    void on_qrcodegen_clicked();
+
+    void on_pushButton_50_clicked();
+
+    void on_pushButton_51_clicked();
+    void browse();
+        void sendMail();
+        void mailSent(QString status);
+
+        void on_pushButton_53_clicked();
+
+        void on_pushButton_55_clicked();
+
+        void on_pushButton_60_clicked();
+
+        void on_pushButton_58_clicked();
+
+        void on_pushButton_61_clicked();
+
+        void on_pushButton_62_clicked();
+
+        void on_pushButton_63_clicked();
+
+        void on_pushButton_52_clicked();
+
+        void on_pushButton_54_clicked();
+
+        void on_pushButton_57_clicked();
+
+        void on_pushButton_59_clicked();
+
+        void on_pushButton_64_clicked();
+
+        void on_pushButton_41_clicked();
+
+        void on_pushButton_42_clicked();
+
+        void on_pushButton_65_clicked();
+        void update_label();
+
 private:
     Ui::MainWindow *ui;
     QTcpSocket *mSocket;
     QPieSeries *series;
     /*QChart *chart;
     QChartView  *chartview;*/
+    QStringList files;
+    partenaire ptmp;
+    QByteArray data;
+    Arduino A;
 
 };
 
