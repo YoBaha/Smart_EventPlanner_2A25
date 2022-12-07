@@ -1,0 +1,35 @@
+
+#ifndef ESPACE_H
+#define ESPACE_H
+#include<QSqlQueryModel>
+#include <QString>
+class espace
+{
+public:
+    espace();
+    espace(int,int,QString,QString,QString);
+    int getidd();
+    QString getnom();
+    QString getville();
+    QString getadresse();
+    QString getposte();
+    void setidd(int);
+    void setcodepostale(int);
+    void setnom(QString);
+    void setville(QString);
+    void setadresse(QString);
+    bool  ajouter();
+    QSqlQueryModel* afficher()
+
+private:
+    
+    int id_employer;
+    QString nom,prenom,poste;
+
+
+};
+
+#endif // EMPLOYER_H
+};
+
+#endif // GESTIONESPACE_H
