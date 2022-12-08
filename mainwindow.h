@@ -6,7 +6,8 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QChartView>
 #include <QtCharts/QtCharts>
-
+#include<Personnel.h>
+#include"smtp.h"
 #include <QStackedWidget>
 #include <QtGui>
 #include<QtWidgets/QMainWindow>
@@ -32,6 +33,23 @@
 #include <QByteArray>
 #include <QFile>
 #include <QFileInfo>
+#include "espace.h"
+
+
+
+
+#include <QtNetwork/QAbstractSocket>
+#include <QtNetwork/QSslSocket>
+#include <QString>
+#include <QTextStream>
+#include <QDebug>
+#include <QtWidgets/QMessageBox>
+#include <QByteArray>
+#include <QFile>
+#include <QFileInfo>
+#include "espace.h"
+#include "notification.h"
+#include "evenement.h"
 
 
 namespace Ui {
@@ -48,6 +66,7 @@ public:
        client cl;
        QSortFilterProxyModel *proxy;
 private slots:
+       void update_label2();
     void on_pushButton_clicked();
 
     void on_pushButton_3_clicked();
@@ -173,8 +192,65 @@ private slots:
 
         void on_pushButton_65_clicked();
         void update_label();
+        void on_pb_ajouter_clicked();
+
+        void on_bp_supp_clicked();
+
+        void on_pb_modf_2_clicked();
+
+        void on_pb_tri_clicked();
+        void on_pb_recherche_clicked();
+
+        void on_pdf_bo_clicked();
+
+        void on_pb_envoyer_clicked();
+        void on_pb_his_clicked();
+        void on_pushButton_66_clicked();
+
+        /*********************************ESPACE******************************************/
+
+
+                void on_pushButton_ajouter_clicked();
+
+                void on_pushButton_modifier_clicked();
+
+                void on_pushButton_afficher_clicked();
+
+                void on_pushButton_PDF_clicked();
+
+                void on_le_recherche_textChanged();
+
+                void on_pushButton_camera_clicked();
+
+                void on_SSS_activated();
+
+                void on_pushButton_68_clicked();
+
+                void on_statistique_clicked();
+
+
+
+                /***********************************************************************/
+
+
+                void on_pushButton_69_clicked();
+
+                void on_pushButton_73_clicked();
+
+                void on_pushButton_70_clicked();
+
+                void on_pushButton_71_clicked();
+
+                void on_pushButton_72_clicked();
+
+                void on_pb_pdf_clicked();
+
+                void on_pushButton_ajout20_clicked();
+
+                void on_pushButton_74_clicked();
 
 private:
+    Personnel E;
     Ui::MainWindow *ui;
     QTcpSocket *mSocket;
     QPieSeries *series;
@@ -184,6 +260,10 @@ private:
     partenaire ptmp;
     QByteArray data;
     Arduino A;
+    Smtp *smtp;
+    notification n;
+    QWidget Widget;
+    Evenement tmp ;
 
 };
 

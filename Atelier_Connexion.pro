@@ -9,10 +9,26 @@ QT += sql
 QT += charts
 QT       += core gui  serialport
 
+QT       += core gui sql \
+    quick
+QT  +=charts
+
+QT += multimedia multimediawidgets
+QT       += core gui serialport
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = Atelier_Connexion
 TEMPLATE = app
+
+QT += widgets multimedia
+QT += printsupport
+QT       += network
+QT       += core gui  serialport
+QT +=gui
+QT += widgets
+QT +=charts
+QT += multimedia multimediawidgets
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -34,10 +50,14 @@ SOURCES += \
     connectdialog.cpp \
     dumessengerserver.cpp \
     dumessengersocket.cpp \
-        main.cpp \
-        mainwindow.cpp \
+    espace.cpp \
+    evenement.cpp \
+    main.cpp \
+    mainwindow.cpp \
     connection.cpp \
+    notification.cpp \
     partenaire.cpp \
+    personnel.cpp \
     smtp.cpp \
     widget.cpp
 
@@ -48,16 +68,20 @@ HEADERS += \
     connectdialog.h \
     dumessengerserver.h \
     dumessengersocket.h \
-        mainwindow.h \
+    espace.h \
+    evenement.h \
+    mainwindow.h \
     connection.h \
+    notification.h \
     partenaire.h \
+    personnel.h \
     smtp.h \
     widget.h
 
 FORMS += \
-        connectdialog.ui \
-        mainwindow.ui \
-        widget.ui
+    connectdialog.ui \
+    mainwindow.ui \
+    widget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -65,5 +89,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 QMAKE_CXXFLAGS +=-std=gnu++11
 
-RESOURCES += \
-    rsc.qrc
+

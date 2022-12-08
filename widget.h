@@ -1,28 +1,45 @@
 #ifndef WIDGET_H
 #define WIDGET_H
 
-#include <QWidget>
-#include <QTcpSocket>
-namespace Ui {
-class widget;
-}
+#include <QDialog>
 
-class widget : public QWidget
+
+namespace Ui { class Widget; }
+
+
+class QCamera ;
+class QCameraViewfinder ;
+class QCameraImageCapture ;
+class QVBoxLayout ;
+class QMenu ;
+class QAction ;
+
+
+
+
+
+class Widget : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit widget(QWidget *parent = nullptr);
-    ~widget();
-
-private slots:
-    void on_sendb_clicked();
-
-    void on_connect_clicked();
+    explicit Widget(QWidget *parent = nullptr);
+    ~Widget();
 
 private:
-    Ui::widget *ui;
-    QTcpSocket *mSocket;
-};
+    Ui::Widget *ui;
+    QCamera *mCamera ;
+    QCameraViewfinder *mCameraViewfinder ;
+    QCameraImageCapture *mCameraImageCapture ;
+    QVBoxLayout  *mLayout ;
+    QMenu *mOptionMenu ;
+    QAction *mAllumerAction ;
+    QAction *mEteindreAction ;
+    QAction *mCaturerAction ;
 
+
+
+
+
+};
 #endif // WIDGET_H

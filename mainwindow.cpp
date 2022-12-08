@@ -25,10 +25,11 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QChartView>
 #include <QtCharts/QtCharts>
-
+#include<QIntValidator>
 #include <QMessageBox>
 #include <QtPrintSupport/QPrintDialog>
 #include <QtPrintSupport/QPrinter>
+#include <QtPrintSupport/QPrintPreviewDialog>
 #include <QDataStream>
 #include <QDialog>
 #include <QFile>
@@ -37,11 +38,19 @@
 #include <QTextTableFormat>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QtConfig>
 #include "partenaire.h"
 #include "smtp.h"
 #include"connection.h"
 #include"QrCode.hpp"
 #include "arduino.h"
+#include"Personnel.h"
+#include "evenement.h"
+
+#include <QWidget>
+#include "widget.h"
+
+
 using namespace qrcodegen;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -49,7 +58,15 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     series=new QPieSeries();
+    ui->le_cin->setValidator(new QIntValidator(00000000, 99999999, this));
+   ui->tab_Personnel->setModel(E.afficher());//return type sqlmodel
+   ui->tableView_3->setModel(tmp.afficher());
+   ui->lineEdit_nom->setValidator(new QRegularExpressionValidator(QRegularExpression("[A-Za-z_ ]"),this));
 
+   ui->lineEdit_place->setValidator(new QRegularExpressionValidator(QRegularExpression("[A-Za-z_ ]{0,20}"),this));
+   ui->lineEdit_tp->setValidator(new QRegularExpressionValidator(QRegularExpression("[A-Za-z_ ]{0,20}"),this));
+   ui->lineEdit_time->setValidator(new QRegularExpressionValidator(QRegularExpression("[A-Za-z_ ]{0,20}"),this));
+   ui->lineEdit_idc->setValidator(new QIntValidator(0,9999));
     //arduino.
         int ret=A.connect_arduino();
             switch(ret){
@@ -659,26 +676,28 @@ void MainWindow::on_qrcodegen_clicked()
     int tabeq=ui->tableView_3->currentIndex().row();
                QVariant idd=ui->tableView_3->model()->data(ui->tableView_3->model()->index(tabeq,0));
                QString id= idd.toString();
+               //id=QString(id);
                QSqlQuery qry;
-               qry.prepare("select * from PARTENAIRE where IDP=:id");
-               qry.bindValue(":IDP",id);
+               qry.prepare("select * from PARTENAIRE");
+               //qry.bindValue(":IDP",id);
                qry.exec();
                   QString nomp, amp, nump, adp, ofrp;
 
                while(qry.next()){
 
 
-                   nomp=qry.value(2).toString();
-                   amp=qry.value(3).toString();
-                   nump=qry.value(4).toString();
-                   adp=qry.value(5).toString();
-                   ofrp=qry.value(6).toString();
+                   id=qry.value(0).toString();
+                   nomp=qry.value(1).toString();
+                   nump=qry.value(2).toString();
+                    ofrp=qry.value(3).toString();
+                     amp=qry.value(4).toString();
+                     adp=qry.value(5).toString();
 
 
                }
 
 
-                      id="NOMP:"+nomp+"AMP:"+amp+"NUMP:"+nump+"ADP:"+adp+"OFRP:"+ofrp;
+                      id="IDP:\t" +id+ "NOMP\t:" +nomp+ "NUMP:\t" +nump+ "OFRP:\t" +ofrp+ "AMP:\t" +amp+ "ADP:\t" +adp ;
                QrCode qr = QrCode::encodeText(id.toUtf8().constData(), QrCode::Ecc::HIGH);
 
                // Read the black & white pixels
@@ -922,14 +941,14 @@ void MainWindow::on_pushButton_41_clicked()
         QMessageBox msgbox;
         if(log=="")
         {
-            ui->stackedWidget->setCurrentIndex(9);
+            ui->stackedWidget->setCurrentIndex(10);
             verif=true;
         }
         else if(qry.exec("select role from PERSONNEL where login =  '"+log+"' " ))
         {
             while(qry.next())
             {   if((qry.value(0)=="") || (qry.value(0)=="pers"))
-                {    ui->stackedWidget->setCurrentIndex(9);
+                {    ui->stackedWidget->setCurrentIndex(10);
 
                         verif=true;}
             }
@@ -956,14 +975,14 @@ void MainWindow::on_pushButton_42_clicked()
         QMessageBox msgbox;
         if(log=="")
         {
-            ui->stackedWidget->setCurrentIndex(9);
+            ui->stackedWidget->setCurrentIndex(11);
             verif=true;
         }
         else if(qry.exec("select role from PERSONNEL where login =  '"+log+"' " ))
         {
             while(qry.next())
             {   if((qry.value(0)=="") || (qry.value(0)=="espa"))
-                {    ui->stackedWidget->setCurrentIndex(9);
+                {    ui->stackedWidget->setCurrentIndex(11);
 
                         verif=true;}
             }
@@ -1046,3 +1065,569 @@ QMessageBox msgbox;
 
 
 }}
+void MainWindow::on_pb_ajouter_clicked()
+{
+   int cin=ui->le_cin->text().toInt();
+   QString nom=ui->le_nom->text();
+   QString prenom=ui->le_prenom->text();
+Personnel E (cin,nom,prenom);
+if(E.ajouter())
+    {
+
+        QMessageBox::information(nullptr,QObject::tr("ok"),
+                              QObject::tr("Ajout effectué\n" "click cancel to exit") ,QMessageBox::Cancel);
+ui->tab_Personnel->setModel(E.afficher());
+ }
+    else
+        QMessageBox::critical(nullptr,QObject::tr("not ok"),
+                              QObject::tr("Ajout non effectué .\n"
+                                          "click cancel to exit ."),QMessageBox::Cancel );
+/*foreach(QLineEdit* le, findChildren<QLineEdit*>()) {
+                                               le->clear();}
+                                          QFile file("C:/Users/TiTa/Desktop/Atelier_Connexion/historique.txt");
+                                          if(!file.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
+                                              return;
+                                          QTextStream cout(&file);
+                                          QString d_info = QDateTime::currentDateTime().toString();
+                                          QString message2=" + "+d_info+" A personnel has been added by cin : "+cin+"\n";
+                                          cout << message2;*/
+
+}
+
+void MainWindow::on_bp_supp_clicked()
+{
+    Personnel E1; E1.setcin(ui->le_cin_supp->text().toInt());
+    bool test=E1.supprimer(E1.getcin());
+    QMessageBox msgBox;
+    if(test)
+       { msgBox.setText("Suppression avec succés");
+ui->tab_Personnel->setModel(E.afficher());
+    }
+    else
+         msgBox.setText("Echec de suppression");
+    msgBox.exec();
+
+}
+
+
+
+
+void MainWindow::on_pb_modf_2_clicked()
+{
+    Personnel e;
+   e.setcin(ui->le_cin_mod->text().toInt());
+    QString nom=ui->nom_mod->text();
+     QString prenom=ui->prenom_mod->text();
+
+    bool test=e.modifier(e.getcin(),nom,prenom);
+
+    QMessageBox msgBox;
+
+
+    if(test)
+    {msgBox.setText("Modification avec succés.");
+    ui->tab_Personnel->setModel(e.afficher());
+
+    }
+    else msgBox.setText("Echec de modification");
+    msgBox.exec();
+}
+
+
+void MainWindow::on_pb_tri_clicked()
+{
+    Personnel e;
+        ui->tab_tri->setModel(e.tripersonnel());
+}
+
+void MainWindow::on_pb_recherche_clicked()
+{
+    Personnel e;
+         QString s1;
+            QSqlQueryModel *model=e.recherche( ui->le_ch->text());
+             ui->tab_Personnel->setModel(model);
+}
+
+
+
+void MainWindow::on_pdf_bo_clicked()
+{
+    //QPdfWriter pdf("C:/Users/TiTa/Desktop/Atelier_Connexion/personnel.pdf");
+        QPdfWriter pdf("personnel.pdf");
+          QPainter painter(&pdf);
+          int i = 4000;
+                 painter.setPen(Qt::darkCyan);
+                 painter.setFont(QFont("Time New Roman", 25));
+                 painter.drawText(3000,1400,"personnel LIST");
+                 painter.setPen(Qt::black);
+                 painter.setFont(QFont("Time New Roman", 15));
+                 painter.drawRect(100,100,9400,2500);
+                 painter.drawRect(100,3000,9400,500);
+                 painter.setFont(QFont("Time New Roman", 9));
+                 painter.drawText(400,3300,"cin");
+                 painter.drawText(1350,3300,"nom");
+                 painter.drawText(2200,3300,"prenom");
+                 painter.drawRect(100,3000,9400,9000);
+
+                 QSqlQuery query;
+                 query.prepare("select * from personnel");
+                 query.exec();
+                 while (query.next())
+                 {
+                     painter.drawText(400,i,query.value(0).toString());
+                     painter.drawText(1350,i,query.value(1).toString());
+                     painter.drawText(2300,i,query.value(2).toString());
+                     painter.drawText(3400,i,query.value(3).toString());
+                     painter.drawText(4400,i,query.value(4).toString());
+                     painter.drawText(6200,i,query.value(5).toString());
+
+
+
+
+                    i = i + 350;
+                 }
+                 QMessageBox::information(this, QObject::tr("PDF Saved Successfuly!"),
+                 QObject::tr("PDF Saved Successfuly!.\n" "Click Cancel to exit."), QMessageBox::Cancel);
+
+}
+
+void MainWindow::on_pb_envoyer_clicked()
+{
+    { smtp = new Smtp("plannerevent990@gmail.com" , "eventplanner123", "smtp.esprit.tn",465);
+               connect(smtp, SIGNAL(status(QString)), this, SLOT(mailSent(QString)));
+
+               QString msg=ui->plainTextEdit->toPlainText();
+
+               smtp->sendMail("siwar_test",ui->lineEdit_ad->text(),ui->lineEdit_obj->text(),msg);
+
+               QMessageBox::information(nullptr, QObject::tr("SENT"),
+                                        QObject::tr("Email Sent Successfully.\n"
+                                                    "Click Cancel to exit."), QMessageBox::Cancel);
+        }
+
+}
+//ARDUINO CAPTEUR SON
+void MainWindow::update_label2()
+{
+    data=A.read_from_arduino();
+
+    if(data=="1")
+
+    ui->etat_capt2->setText("SON DETECTE");
+
+    else if (data=="0")
+
+        ui->etat_capt2->setText("SON NON DETECTE");
+     //alors afficher msg
+}
+
+void MainWindow::on_pushButton_66_clicked()
+{
+     ui->stackedWidget->setCurrentIndex(8);
+}
+/******************************************************************************/
+
+
+
+void MainWindow::on_pushButton_ajouter_clicked()
+{
+    espace esp;
+    int idd=ui->le_id->text().toInt();
+    int codepostale =ui->le_codepostale->text().toInt();
+    QString nom=ui->le_nom->text();
+    QString adresse=ui->le_adresse->text();
+    QString ville=ui->le_ville->text();
+    espace E (idd,codepostale,nom,adresse,ville);
+    bool test=E.ajouter();
+    if(test) {
+        n.notification_ajout();
+        ui->comboBox_supprimer->setModel(esp.afficheroncomboact());
+        QMessageBox::information(nullptr, QObject::tr("success"),
+                    QObject::tr("success.\n"
+                                "ajout effectue."), QMessageBox::Cancel);
+
+}
+    else
+        QMessageBox::critical(nullptr, QObject::tr("erreur"),
+                    QObject::tr("ajout impossible.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+
+
+}
+
+
+
+
+void MainWindow::on_pushButton_modifier_clicked()
+{
+
+    espace esp;
+    int idd=ui->le_id->text().toInt();
+    int codepostale =ui->le_codepostale->text().toInt();
+    QString nom=ui->le_nom->text();
+    QString adresse=ui->le_adresse->text();
+    QString ville=ui->le_ville->text();
+
+    bool    test=esp.modifier(idd,codepostale,nom,adresse,ville);
+
+          if (test)
+          {
+                  ui->tab_esp->setModel(esp.afficher());
+              QMessageBox::information(nullptr,QObject::tr("OK"),
+                                   QObject::tr("modification établie"),
+                                   QMessageBox::Ok);}
+          else{
+          QMessageBox::critical(nullptr,QObject::tr("ERROR404"),
+                                  QObject::tr("modification non établie"),
+                                  QMessageBox::Cancel);}
+}
+
+void MainWindow::on_pushButton_afficher_clicked()
+{
+
+    espace esp;
+    ui->tab_esp->setModel(esp.afficher());
+
+    ui->comboBox_supprimer->setModel(esp.afficheroncomboact());
+
+}
+
+void MainWindow::on_pushButton_PDF_clicked()
+{
+    //QPdfWriter pdf("C:\\Users\\jordi\\Desktop\\PDF_espace.pdf");
+QPdfWriter pdf("PDF_espace.pdf");
+       QPainter painter(&pdf);
+       int i = 4000;
+              painter.setPen(Qt::red);
+              painter.setFont(QFont("Time New Roman", 25));
+              painter.drawText(3000,1400,"Liste Des Espaces");
+              painter.setPen(Qt::black);
+              painter.setFont(QFont("Time New Roman", 15));
+              painter.drawRect(100,3000,9400,500);
+              painter.setFont(QFont("Time New Roman", 9));
+              painter.drawText(1000,3300,"Idd");
+              painter.drawText(2500,3300,"Codepostal");
+              painter.drawText(4000,3300,"Nom");
+              painter.drawText(5500,3300,"Adresse");
+              painter.drawText(7000,3300,"Ville");
+              painter.drawRect(100,3000,9400,9000);
+
+              QSqlQuery query;
+              query.prepare("select * from GESTIONESPACE");
+              query.exec();
+              while (query.next())
+              {
+                  painter.drawText(1000,i,query.value(0).toString());
+                  painter.drawText(2500,i,query.value(1).toString());
+                  painter.drawText(4000,i,query.value(2).toString());
+                  painter.drawText(5500,i,query.value(3).toString());
+                  painter.drawText(7000,i,query.value(4).toString());
+
+
+                 i = i + 350;
+              }
+              QMessageBox::information(this, QObject::tr("PDF Enregistré!"),
+              QObject::tr("PDF Enregistré!.\n" "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+void MainWindow::on_le_recherche_textChanged()
+{
+
+    espace esp;
+    QString rech=ui->le_recherche->text();
+    ui->tab_esp->setModel(esp.Rechercheesp(rech));
+}
+
+
+void MainWindow::on_SSS_activated()
+{
+    if(ui->SSS->currentText()=="Tri par IDD")
+    {
+        espace esp;
+        ui->tab_esp->setModel(esp.trierespParID());
+
+    }
+}
+
+void MainWindow::on_pushButton_68_clicked()
+{
+    espace esp;
+        int idd=ui->comboBox_supprimer->currentText().toInt();
+        bool test=esp.supprimer(idd);
+         ui->comboBox_supprimer->setModel(esp.afficheroncomboact());
+        if (test)
+        {
+            n.notification_supprimer();
+            ui->tab_esp->setModel(esp.afficher());
+                    QMessageBox::information(nullptr, QObject::tr("OK"),
+                            QObject::tr("suppression effectué\n"
+                                        "click cancel to exit."), QMessageBox::Cancel);
+
+              }
+                else QMessageBox::critical(nullptr,QObject::tr("not ok"),QObject::tr("Suppression non effectué\n""click cancel to exit"), QMessageBox::Cancel);
+
+
+}
+
+void MainWindow::on_statistique_clicked()
+{
+    QSqlQueryModel * model= new QSqlQueryModel();
+                     model->setQuery("select * from GESTIONESPACE where codepostale < 100 ");
+                     float code=model->rowCount();
+                     model->setQuery("select * from GESTIONESPACE where codepostale  between 100 and 1000 ");
+                     float codee=model->rowCount();
+                     model->setQuery("select * from GESTIONESPACE where codepostale >1000 ");
+                     float codeee=model->rowCount();
+                     float total=code+codee+codeee;
+                     QString a=QString("moins de 100 \t"+QString::number((code*100)/total,'f',2)+"%" );
+                     QString b=QString("entre 100 et 1000 \t"+QString::number((codee*100)/total,'f',2)+"%" );
+                     QString c=QString("+1000 \t"+QString::number((codeee*100)/total,'f',2)+"%" );
+                     QPieSeries *series = new QPieSeries();
+                     series->append(a,code);
+                     series->append(b,codee);
+                     series->append(c,codeee);
+             if (code!=0)
+             {QPieSlice *slice = series->slices().at(0);
+              slice->setLabelVisible();
+              slice->setPen(QPen());}
+             if ( codee!=0)
+             {
+                      // Add label, explode and define brush for 2nd slice
+                      QPieSlice *slice1 = series->slices().at(1);
+                      //slice1->setExploded();
+                      slice1->setLabelVisible();
+             }
+             if(codeee!=0)
+             {
+                      // Add labels to rest of slices
+                      QPieSlice *slice2 = series->slices().at(2);
+                      //slice1->setExploded();
+                      slice2->setLabelVisible();
+             }
+                     // Create the chart widget
+                     QChart *chart = new QChart();
+                     // Add data to chart with title and hide legend
+                     chart->addSeries(series);
+                     chart->setTitle("Pourcentage Par Code postale :Nombre Des Espaces "+ QString::number(total));
+                     chart->legend()->hide();
+                     // Used to display the chart
+                     QChartView *chartView = new QChartView(chart);
+                     chartView->setRenderHint(QPainter::Antialiasing);
+                     chartView->resize(1000,500);
+                     chartView->show();
+
+
+
+}
+
+void MainWindow::on_pushButton_69_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(8);
+}
+/********************************************* events*/
+
+
+void MainWindow::on_pushButton_ajout20_clicked()
+{
+    QString nomevent=ui->lineEdit_nom->text();
+   QString typeevent=ui->lineEdit_tp->text();
+   QString placeevent=ui->lineEdit_place->text();
+   QString timeevent=ui->lineEdit_time->text();
+   QString date_debut=ui->lineEdit_datedeb->text();
+   QString date_fin=ui->lineEdit_datefin->text();
+   int id=ui->lineEdit_idc->text().toInt() ;
+
+   Evenement c (id,nomevent,typeevent,placeevent,timeevent,date_debut,date_fin) ;
+
+   bool test=c.ajouter() ;
+   if(test)
+   {
+       ui->tableView_3->setModel(c.afficher());
+       QMessageBox::information(nullptr, QObject::tr("ajouter"),
+                   QObject::tr("ajout avec succes.\n"
+                               "Click Cancel to exit."), QMessageBox::Cancel);
+
+}
+   else
+       QMessageBox::critical(nullptr, QObject::tr("ajouter"),
+                   QObject::tr("erreur d'ajout.\n"
+                               "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+
+
+void MainWindow::on_pushButton_73_clicked()//upd
+{
+    QString nomevent=ui->lineEdit_nommod->text();
+   QString typeevent=ui->lineEdit_typemod->text();
+   QString placeevent=ui->lineEdit_placemod->text();
+   QString timeevent=ui->lineEdit_timemod->text();
+   QString date_debut=ui->lineEdit_debutmod->text();
+   QString date_fin=ui->lineEdit_finmod->text();
+   int id=ui->lineEdit_idmod->text().toInt() ;
+
+
+
+    bool test=tmp.modifier(id,nomevent,typeevent,placeevent,timeevent,date_debut,date_fin) ;
+    QMessageBox msBox;
+    if(test)
+    {
+        ui->tableView_3->setModel(tmp.afficher());
+        ui->tableView_3->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        msBox.setText("modification reussite");
+        msBox.exec();
+
+        ui->lineEdit_placemod->clear();
+        ui->lineEdit_nommod->clear();
+        ui->lineEdit_typemod->clear();
+        ui->lineEdit_timemod->clear();
+        ui->lineEdit_debutmod->clear();
+        ui->lineEdit_finmod->clear();
+    }
+    else
+    {
+        msBox.setText("ERREUR");
+        msBox.exec();}
+    ui->lineEdit_placemod->clear();
+    ui->lineEdit_nommod->clear();
+    ui->lineEdit_typemod->clear();
+    ui->lineEdit_timemod->clear();
+    ui->lineEdit_debutmod->clear();
+    ui->lineEdit_finmod->clear();
+}
+
+void MainWindow::on_pushButton_70_clicked()//supr
+{
+    int id=ui->lineEdit_idc->text().toInt() ;
+    bool test=tmp.supprimer(id) ;
+    if(test)
+    {
+        ui->tableView_3->setModel(tmp.afficher());
+        QMessageBox::information(nullptr, QObject::tr("suprimer"),
+                    QObject::tr("Evenement supprime!!!.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+
+}
+    else
+        QMessageBox::critical(nullptr, QObject::tr("supprimer"),
+                    QObject::tr("suppression non effectue.\n"
+                                "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+void MainWindow::on_pushButton_71_clicked()//tri
+{
+    QMessageBox msgBox ;
+         QSqlQueryModel *model = new QSqlQueryModel();
+               model->setQuery("select * from evenement order by id ASC,nomevent");
+               model->setHeaderData(0,Qt::Horizontal,QObject::tr("id"));
+                 model->setHeaderData(1,Qt::Horizontal,QObject::tr("nomevent"));
+                   model->setHeaderData(2,Qt::Horizontal,QObject::tr("typeevent"));
+                     model->setHeaderData(3,Qt::Horizontal,QObject::tr("placeevent"));
+               model->setHeaderData(4,Qt::Horizontal,QObject::tr("timeevent"));
+                  model->setHeaderData(5,Qt::Horizontal,QObject::tr("date_debut"));
+                  model->setHeaderData(6,Qt::Horizontal,QObject::tr("date_fin"));
+               ui->tableView_3->setModel(model);
+               ui->tableView_3->show();
+                msgBox.setText("Tri avec succés.");
+                msgBox.exec();
+}
+
+void MainWindow::on_pushButton_72_clicked()//reche
+{
+    QMessageBox msgBox ;
+        QSqlQueryModel *model = new QSqlQueryModel();
+        QString cod;
+        cod = ui->lineEdit_idc->text();
+        model->setQuery("Select * from evenement where id = '"+cod+"' ");
+
+        model->setHeaderData(0,Qt::Horizontal,QObject::tr("id"));
+          model->setHeaderData(1,Qt::Horizontal,QObject::tr("nomevent"));
+            model->setHeaderData(2,Qt::Horizontal,QObject::tr("typeevent"));
+              model->setHeaderData(3,Qt::Horizontal,QObject::tr("placeevent"));
+        model->setHeaderData(4,Qt::Horizontal,QObject::tr("timeevent"));
+           model->setHeaderData(5,Qt::Horizontal,QObject::tr("date_debut"));
+           model->setHeaderData(6,Qt::Horizontal,QObject::tr("date_fin"));
+        ui->tableView_3->setModel(model);
+        ui->tableView_3->show();
+        msgBox.setText("Evenement trouver ");
+        msgBox.exec();
+        ui->lineEdit_idmc->clear();
+        QSqlQuery qry;
+        qry.prepare("select * from evenement where id='"+cod+"'  " );
+
+        if(qry.exec())
+        {
+            while(qry.next())
+            {
+                ui->lineEdit_idmod->setText(qry.value(0).toString());
+                 ui->lineEdit_nommod->setText(qry.value(1).toString());
+                ui->lineEdit_typemod->setText(qry.value(2).toString());
+               ui->lineEdit_placemod->setText(qry.value(3).toString());
+               ui->lineEdit_timemod->setText(qry.value(4).toString());
+               ui->lineEdit_debutmod->setText(qry.value(5).toString());
+               ui->lineEdit_finmod->setText(qry.value(6).toString());
+
+
+            }
+        }
+}
+
+void MainWindow::on_pb_pdf_clicked()//pdf
+{
+    QPdfWriter pdf("C:/Users/MSI/Desktop/New folder (2)/Atelier_Connexion - Copie (3) - Copie/evenement.pdf");
+
+          QPainter painter(&pdf);
+          int i = 4000;
+                 painter.setPen(Qt::darkCyan);
+                 painter.setFont(QFont("Time New Roman", 25));
+                 painter.drawText(3000,1400,"Event LIST");
+                 painter.setPen(Qt::black);
+                 painter.setFont(QFont("Time New Roman", 15));
+                 painter.drawRect(100,100,9400,2500);
+                 painter.drawRect(100,3000,9400,500);
+                 painter.setFont(QFont("Time New Roman", 9));
+                 painter.drawText(400,3300,"id");
+                 painter.drawText(1350,3300,"nomevent");
+                 painter.drawText(2200,3300,"typeevent");
+                 painter.drawText(2200,3300,"placeevent");
+                 painter.drawText(2200,3300,"timeevent");
+                 painter.drawText(2200,3300,"date_debut");
+                 painter.drawText(2200,3300,"date_fin");
+
+
+                 painter.drawRect(100,3000,9400,9000);
+
+                 QSqlQuery query;
+                 query.prepare("select * from evenement");
+                 query.exec();
+                 while (query.next())
+                 {
+                     painter.drawText(400,i,query.value(0).toString());
+                     painter.drawText(1350,i,query.value(1).toString());
+                     painter.drawText(2300,i,query.value(2).toString());
+                     painter.drawText(3400,i,query.value(3).toString());
+                     painter.drawText(4400,i,query.value(4).toString());
+                     painter.drawText(6200,i,query.value(5).toString());
+
+
+
+
+                    i = i + 350;
+                 }
+                 QMessageBox::information(this, QObject::tr("PDF Saved Successfuly!"),
+                 QObject::tr("PDF Saved Successfuly!.\n" "Click Cancel to exit."), QMessageBox::Cancel);
+}
+
+
+
+void MainWindow::on_pushButton_74_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(8);
+}
+
+void MainWindow::on_pushButton_camera_clicked()
+{
+    QWidget w ;
+    w.show();
+
+}
